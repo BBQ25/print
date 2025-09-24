@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Sep 18, 2025 at 08:07 AM
+-- Generation Time: Sep 24, 2025 at 03:35 AM
 -- Server version: 8.0.30
 -- PHP Version: 8.1.10
 
@@ -308,6 +308,29 @@ INSERT INTO `activity_logs` (`id`, `user_id`, `action`, `table_name`, `record_id
 (207, 1, 'logout', 'users', 1, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:142.0) Gecko/20100101 Firefox/142.0', '2025-09-07 12:50:11'),
 (208, 3, 'login', 'users', 3, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:142.0) Gecko/20100101 Firefox/142.0', '2025-09-07 12:53:45'),
 (209, 1, 'login', 'users', 1, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:142.0) Gecko/20100101 Firefox/142.0', '2025-09-07 13:26:28');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `admin_users`
+--
+
+CREATE TABLE `admin_users` (
+  `id` int NOT NULL,
+  `name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `password` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `role` enum('admin','staff') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'staff',
+  `status` enum('active','inactive') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'active',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `admin_users`
+--
+
+INSERT INTO `admin_users` (`id`, `name`, `password`, `role`, `status`, `created_at`, `updated_at`) VALUES
+(1, 'System Administrator', 'admin123', 'admin', 'active', '2025-09-24 01:51:15', '2025-09-24 01:51:15');
 
 -- --------------------------------------------------------
 
@@ -633,32 +656,18 @@ CREATE TABLE `file_upload_devices` (
 --
 
 INSERT INTO `file_upload_devices` (`id`, `file_id`, `device_id`, `upload_timestamp`, `upload_method`) VALUES
-(1, 121, 1, '2025-09-18 05:03:38', 'web'),
-(2, 123, 1, '2025-09-18 05:04:13', 'web'),
-(3, 124, 1, '2025-09-18 05:04:13', 'web'),
-(4, 125, 1, '2025-09-18 05:04:13', 'web'),
-(5, 126, 2, '2025-09-18 05:09:22', 'web'),
-(6, 127, 2, '2025-09-18 05:09:22', 'web'),
-(7, 128, 2, '2025-09-18 05:09:22', 'web'),
-(8, 129, 2, '2025-09-18 05:09:22', 'web'),
-(9, 130, 2, '2025-09-18 05:13:27', 'web'),
-(10, 131, 2, '2025-09-18 05:13:27', 'web'),
-(11, 132, 2, '2025-09-18 05:13:27', 'web'),
-(12, 133, 2, '2025-09-18 05:13:27', 'web'),
-(13, 134, 1, '2025-09-18 05:19:22', 'web'),
-(14, 135, 1, '2025-09-18 05:19:22', 'web'),
-(15, 136, 1, '2025-09-18 05:19:22', 'web'),
-(16, 137, 1, '2025-09-18 05:21:43', 'web'),
-(17, 138, 1, '2025-09-18 05:21:43', 'web'),
-(18, 139, 1, '2025-09-18 05:21:43', 'web'),
-(19, 140, 1, '2025-09-18 05:21:43', 'web'),
-(20, 141, 1, '2025-09-18 05:21:43', 'web'),
-(21, 142, 1, '2025-09-18 05:34:07', 'web'),
-(22, 143, 1, '2025-09-18 05:34:07', 'web'),
-(23, 144, 1, '2025-09-18 05:34:07', 'web'),
-(24, 145, 2, '2025-09-18 05:34:40', 'web'),
-(25, 146, 2, '2025-09-18 05:34:40', 'web'),
-(26, 147, 2, '2025-09-18 05:34:40', 'web');
+(36, 157, 1, '2025-09-24 10:53:55', 'web'),
+(37, 158, 1, '2025-09-24 10:53:55', 'web'),
+(38, 159, 1, '2025-09-24 11:07:16', 'web'),
+(39, 160, 1, '2025-09-24 11:07:16', 'web'),
+(40, 161, 1, '2025-09-24 11:07:16', 'web'),
+(41, 162, 1, '2025-09-24 11:07:16', 'web'),
+(42, 163, 1, '2025-09-24 11:07:16', 'web'),
+(43, 164, 2, '2025-09-24 11:25:54', 'web'),
+(44, 165, 2, '2025-09-24 11:25:54', 'web'),
+(45, 166, 2, '2025-09-24 11:25:54', 'web'),
+(46, 167, 2, '2025-09-24 11:25:54', 'web'),
+(47, 168, 2, '2025-09-24 11:25:54', 'web');
 
 -- --------------------------------------------------------
 
@@ -2559,8 +2568,9 @@ CREATE TABLE `student_devices` (
 --
 
 INSERT INTO `student_devices` (`id`, `StudentNo`, `device_id`, `device_name`, `device_type`, `operating_system`, `browser_name`, `browser_version`, `ip_address`, `mac_address`, `user_agent`, `screen_resolution`, `timezone`, `location_latitude`, `location_longitude`, `location_address`, `network_type`, `connection_speed`, `first_seen`, `last_seen`, `is_active`, `trust_level`, `notes`) VALUES
-(1, '2410222-2', '4a239914a8b7190ae86ea28d212458f1', 'Windows Computer', 'desktop', 'Windows 10', 'Firefox', '143.0', '127.0.0.1', 'F8-54-F6-BB-95-3E', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:143.0) Gecko/20100101 Firefox/143.0', NULL, 'UTC', '10.30990000', '123.89300000', NULL, NULL, NULL, '2025-09-18 05:03:08', '2025-09-18 05:34:07', 1, 'unknown', NULL),
-(2, '2210222-2', '7c7932fb8ce7219f2378f343708f890f', 'Linux Computer', 'mobile', 'Linux', 'Chrome', '140.0.0.0', '192.168.127.31', '00:1B:44:A8:7F:1F', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36', NULL, 'UTC', NULL, NULL, NULL, NULL, NULL, '2025-09-18 05:09:22', '2025-09-18 05:34:40', 1, 'unknown', NULL);
+(1, '2410222-2', '4a239914a8b7190ae86ea28d212458f1', 'Windows Computer', 'desktop', 'Windows 10', 'Firefox', '143.0', '127.0.0.1', 'F8-54-F6-BB-95-3E', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:143.0) Gecko/20100101 Firefox/143.0', NULL, 'UTC', '10.35564278', '124.96705336', NULL, NULL, NULL, '2025-09-18 05:03:08', '2025-09-24 11:07:15', 1, 'unknown', NULL),
+(2, '2210222-2', '7c7932fb8ce7219f2378f343708f890f', 'Linux Computer', 'mobile', 'Linux', 'Chrome', '140.0.0.0', '192.168.15.9', '00:1B:44:A8:0F:09', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36', NULL, 'UTC', NULL, NULL, NULL, NULL, NULL, '2025-09-18 05:09:22', '2025-09-24 11:25:54', 1, 'unknown', NULL),
+(3, '2410022-1', '4a239914a8b7190ae86ea28d212458f1', 'Windows Computer', 'desktop', 'Windows 10', 'Firefox', '143.0', '127.0.0.1', 'F8-54-F6-BB-95-3E', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:143.0) Gecko/20100101 Firefox/143.0', NULL, 'UTC', '10.35573095', '124.96754976', NULL, NULL, NULL, '2025-09-23 11:08:33', '2025-09-23 11:08:33', 1, 'unknown', NULL);
 
 -- --------------------------------------------------------
 
@@ -2821,8 +2831,15 @@ CREATE TABLE `uploaded_files` (
   `file_path` varchar(500) COLLATE utf8mb4_general_ci NOT NULL,
   `file_size` bigint NOT NULL,
   `file_type` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `mac_address` varchar(17) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `location_latitude` decimal(10,8) DEFAULT NULL,
+  `location_longitude` decimal(11,8) DEFAULT NULL,
+  `location_address` text COLLATE utf8mb4_general_ci,
   `upload_date` datetime NOT NULL,
   `status` enum('pending','processing','completed','failed') COLLATE utf8mb4_general_ci DEFAULT 'pending',
+  `is_deleted` tinyint(1) DEFAULT '0',
+  `deleted_at` datetime DEFAULT NULL,
+  `deleted_by` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `download_count` int DEFAULT '0',
   `first_download_date` datetime DEFAULT NULL,
   `last_download_date` datetime DEFAULT NULL,
@@ -2837,33 +2854,19 @@ CREATE TABLE `uploaded_files` (
 -- Dumping data for table `uploaded_files`
 --
 
-INSERT INTO `uploaded_files` (`id`, `StudentNo`, `original_name`, `file_name`, `file_path`, `file_size`, `file_type`, `upload_date`, `status`, `download_count`, `first_download_date`, `last_download_date`, `processed_date`, `notes`, `created_at`, `updated_at`, `page_count`) VALUES
-(121, '2410222-2', '387.pdf', '68cb222a5d40d_1758143018_1.pdf', 'uploads/68cb222a5d40d_1758143018_1.pdf', 158950, 'application/pdf', '2025-09-18 05:03:38', 'completed', 0, NULL, NULL, NULL, NULL, '2025-09-18 05:03:38', '2025-09-18 05:03:38', NULL),
-(123, '2410222-2', '(Bontoc Campus) - 2210014-2 (Salan, Persel Mae).xlsx', '68cb224d6cab0_1758143053_0.xlsx', 'uploads/68cb224d6cab0_1758143053_0.xlsx', 762003, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', '2025-09-18 05:04:13', 'completed', 0, NULL, NULL, NULL, NULL, '2025-09-18 05:04:13', '2025-09-18 05:04:13', NULL),
-(124, '2410222-2', '387.pdf', '68cb224d6e7ce_1758143053_1.pdf', 'uploads/68cb224d6e7ce_1758143053_1.pdf', 158950, 'application/pdf', '2025-09-18 05:04:13', 'completed', 0, NULL, NULL, NULL, NULL, '2025-09-18 05:04:13', '2025-09-18 05:04:13', NULL),
-(125, '2410222-2', 'Barcelona_Accidents(11-26,2024).cpg', '68cb224d70099_1758143053_2.cpg', 'uploads/68cb224d70099_1758143053_2.cpg', 5, 'application/octet-stream', '2025-09-18 05:04:13', 'completed', 0, NULL, NULL, NULL, NULL, '2025-09-18 05:04:13', '2025-09-18 05:04:13', NULL),
-(126, '2210222-2', 'IMG20250917090530.jpg', '68cb2382a2cb5_1758143362_0.jpg', 'uploads/68cb2382a2cb5_1758143362_0.jpg', 1385804, 'image/jpeg', '2025-09-18 05:09:22', 'completed', 0, NULL, NULL, NULL, NULL, '2025-09-18 05:09:22', '2025-09-18 05:09:22', NULL),
-(127, '2210222-2', 'IMG20250917090526.jpg', '68cb2382a478e_1758143362_1.jpg', 'uploads/68cb2382a478e_1758143362_1.jpg', 1344836, 'image/jpeg', '2025-09-18 05:09:22', 'completed', 0, NULL, NULL, NULL, NULL, '2025-09-18 05:09:22', '2025-09-18 05:09:22', NULL),
-(128, '2210222-2', 'Screenshot_2025-09-17-06-36-33-16_a23b203fd3aafc6dcb84e438dda678b6.jpg', '68cb2382a61c8_1758143362_2.jpg', 'uploads/68cb2382a61c8_1758143362_2.jpg', 349971, 'image/jpeg', '2025-09-18 05:09:22', 'completed', 0, NULL, NULL, NULL, NULL, '2025-09-18 05:09:22', '2025-09-18 05:09:22', NULL),
-(129, '2210222-2', 'Screenshot_2025-09-16-19-04-40-19_a23b203fd3aafc6dcb84e438dda678b6.jpg', '68cb2382a7adb_1758143362_3.jpg', 'uploads/68cb2382a7adb_1758143362_3.jpg', 415690, 'image/jpeg', '2025-09-18 05:09:22', 'completed', 0, NULL, NULL, NULL, NULL, '2025-09-18 05:09:22', '2025-09-18 05:09:22', NULL),
-(130, '2210222-2', 'IMG20250915091556.jpg', '68cb2477badd3_1758143607_0.jpg', 'uploads/68cb2477badd3_1758143607_0.jpg', 1362372, 'image/jpeg', '2025-09-18 05:13:27', 'completed', 0, NULL, NULL, NULL, NULL, '2025-09-18 05:13:27', '2025-09-18 05:13:27', NULL),
-(131, '2210222-2', 'IMG20250915091600.jpg', '68cb2477bcd82_1758143607_1.jpg', 'uploads/68cb2477bcd82_1758143607_1.jpg', 1517561, 'image/jpeg', '2025-09-18 05:13:27', 'completed', 0, NULL, NULL, NULL, NULL, '2025-09-18 05:13:27', '2025-09-18 05:13:27', NULL),
-(132, '2210222-2', 'IMG20250915091553.jpg', '68cb2477bebea_1758143607_2.jpg', 'uploads/68cb2477bebea_1758143607_2.jpg', 1195715, 'image/jpeg', '2025-09-18 05:13:27', 'completed', 0, NULL, NULL, NULL, NULL, '2025-09-18 05:13:27', '2025-09-18 05:13:27', NULL),
-(133, '2210222-2', 'IMG20250915091604.jpg', '68cb2477c0975_1758143607_3.jpg', 'uploads/68cb2477c0975_1758143607_3.jpg', 1438985, 'image/jpeg', '2025-09-18 05:13:27', 'completed', 0, NULL, NULL, NULL, NULL, '2025-09-18 05:13:27', '2025-09-18 05:13:27', NULL),
-(134, '2410222-2', 'IAS 2 Clearance.xlsx', '68cb25da6d001_1758143962_0.xlsx', 'uploads/68cb25da6d001_1758143962_0.xlsx', 9725, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', '2025-09-18 05:19:22', 'completed', 0, NULL, NULL, NULL, NULL, '2025-09-18 05:19:22', '2025-09-18 05:19:22', NULL),
-(135, '2410222-2', 'img20240730_11112976.pdf', '68cb25da7024c_1758143962_1.pdf', 'uploads/68cb25da7024c_1758143962_1.pdf', 149864, 'application/pdf', '2025-09-18 05:19:22', 'completed', 0, NULL, NULL, NULL, NULL, '2025-09-18 05:19:22', '2025-09-18 05:19:22', NULL),
-(136, '2410222-2', 'Information, Education and Communication Material DevelopmentSeptember 7.docx', '68cb25da72136_1758143962_2.docx', 'uploads/68cb25da72136_1758143962_2.docx', 16525, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', '2025-09-18 05:19:22', 'completed', 0, NULL, NULL, NULL, NULL, '2025-09-18 05:19:22', '2025-09-18 05:19:22', NULL),
-(137, '2410222-2', 'Business Card_Pascual, Gladys.pptx', '68cb26673ec0d_1758144103_0.pptx', 'uploads/68cb26673ec0d_1758144103_0.pptx', 3766869, 'application/vnd.openxmlformats-officedocument.presentationml.presentation', '2025-09-18 05:21:43', 'completed', 0, NULL, NULL, NULL, NULL, '2025-09-18 05:21:43', '2025-09-18 05:21:43', 1),
-(138, '2410222-2', 'Certificate.docx', '68cb266742a55_1758144103_1.docx', 'uploads/68cb266742a55_1758144103_1.docx', 259615, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', '2025-09-18 05:21:43', 'completed', 0, NULL, NULL, NULL, NULL, '2025-09-18 05:21:43', '2025-09-18 05:21:43', 1),
-(139, '2410222-2', 'Certificate.pdf', '68cb266765af6_1758144103_2.pdf', 'uploads/68cb266765af6_1758144103_2.pdf', 295550, 'application/pdf', '2025-09-18 05:21:43', 'completed', 0, NULL, NULL, NULL, NULL, '2025-09-18 05:21:43', '2025-09-18 05:21:43', 2),
-(140, '2410222-2', 'CISA - Client Satisfaction Survey Result (AutoRecovered).docx', '68cb266789143_1758144103_3.docx', 'uploads/68cb266789143_1758144103_3.docx', 331177, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', '2025-09-18 05:21:43', 'completed', 0, NULL, NULL, NULL, NULL, '2025-09-18 05:21:43', '2025-09-18 05:21:43', 8),
-(141, '2410222-2', 'CISA-P_Internet Subscription.xlsx', '68cb266795e79_1758144103_4.xlsx', 'uploads/68cb266795e79_1758144103_4.xlsx', 71761, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', '2025-09-18 05:21:43', 'completed', 0, NULL, NULL, NULL, NULL, '2025-09-18 05:21:43', '2025-09-18 05:21:43', 10),
-(142, '2410222-2', 'Barcelona_Accidents(11-26,2024).prj', '68cb294f4a4b4_1758144847_0.prj', 'uploads/68cb294f4a4b4_1758144847_0.prj', 423, 'application/octet-stream', '2025-09-18 05:34:07', 'completed', 0, NULL, NULL, NULL, NULL, '2025-09-18 05:34:07', '2025-09-18 05:34:07', 1),
-(143, '2410222-2', 'Barcelona_Accidents(11-26,2024).qmd', '68cb294f4c180_1758144847_1.qmd', 'uploads/68cb294f4c180_1758144847_1.qmd', 2296, 'application/octet-stream', '2025-09-18 05:34:07', 'completed', 0, NULL, NULL, NULL, NULL, '2025-09-18 05:34:07', '2025-09-18 05:34:07', 1),
-(144, '2410222-2', 'Barcelona_Accidents(11-26,2024).shp', '68cb294f4df0c_1758144847_2.shp', 'uploads/68cb294f4df0c_1758144847_2.shp', 302640, 'application/octet-stream', '2025-09-18 05:34:07', 'completed', 0, NULL, NULL, NULL, NULL, '2025-09-18 05:34:07', '2025-09-18 05:34:07', 3),
-(145, '2210222-2', 'IMG20250917090530.jpg', '68cb29702facf_1758144880_0.jpg', 'uploads/68cb29702facf_1758144880_0.jpg', 1385804, 'image/jpeg', '2025-09-18 05:34:40', 'completed', 0, NULL, NULL, NULL, NULL, '2025-09-18 05:34:40', '2025-09-18 05:34:40', 14),
-(146, '2210222-2', 'IMG20250917090526.jpg', '68cb29703401f_1758144880_1.jpg', 'uploads/68cb29703401f_1758144880_1.jpg', 1344836, 'image/jpeg', '2025-09-18 05:34:40', 'completed', 0, NULL, NULL, NULL, NULL, '2025-09-18 05:34:40', '2025-09-18 05:34:40', 14),
-(147, '2210222-2', 'Screenshot_2025-09-17-06-36-33-16_a23b203fd3aafc6dcb84e438dda678b6.jpg', '68cb29703595b_1758144880_2.jpg', 'uploads/68cb29703595b_1758144880_2.jpg', 349971, 'image/jpeg', '2025-09-18 05:34:40', 'completed', 0, NULL, NULL, NULL, NULL, '2025-09-18 05:34:40', '2025-09-18 05:34:40', 4);
+INSERT INTO `uploaded_files` (`id`, `StudentNo`, `original_name`, `file_name`, `file_path`, `file_size`, `file_type`, `mac_address`, `location_latitude`, `location_longitude`, `location_address`, `upload_date`, `status`, `is_deleted`, `deleted_at`, `deleted_by`, `download_count`, `first_download_date`, `last_download_date`, `processed_date`, `notes`, `created_at`, `updated_at`, `page_count`) VALUES
+(157, '2410222-2', 'April - June worksheet far 1A.xlsx', '68d35d4371a11_1758682435.xlsx', 'uploads/BSFi/2nd_Year/2410222-2 - Amparo, Charlene Enriquez/68d35d4371a11_1758682435.xlsx', 101724, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'F854F6BB953E', '10.35572000', '124.96739000', '10.355720, 124.967390', '2025-09-24 10:53:55', 'completed', 1, '2025-09-24 11:03:36', '2410222-2', 0, NULL, NULL, NULL, NULL, '2025-09-24 10:53:55', '2025-09-24 11:03:36', 3),
+(158, '2410222-2', 'AR Form.docx', '68d35d437506e_1758682435.docx', 'uploads/BSFi/2nd_Year/2410222-2 - Amparo, Charlene Enriquez/68d35d437506e_1758682435.docx', 1050253, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'F854F6BB953E', '10.35572000', '124.96739000', '10.355720, 124.967390', '2025-09-24 10:53:55', 'completed', 1, '2025-09-24 11:04:20', '2410222-2', 0, NULL, NULL, NULL, NULL, '2025-09-24 10:53:55', '2025-09-24 11:04:20', 4),
+(159, '2410222-2', 'Accomplishment Report  2123.pdf', '68d3606400af1_1758683236.pdf', 'uploads/BSFi/2nd_Year/2410222-2 - Amparo, Charlene Enriquez/68d3606400af1_1758683236.pdf', 1697027, 'application/pdf', 'F854F6BB953E', '10.35564300', '124.96705300', '10.355643, 124.967053', '2025-09-24 11:07:16', 'completed', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL, '2025-09-24 11:07:16', '2025-09-24 11:07:16', NULL),
+(160, '2410222-2', 'Accomplishment Report Form.pdf', '68d3606427947_1758683236.pdf', 'uploads/BSFi/2nd_Year/2410222-2 - Amparo, Charlene Enriquez/68d3606427947_1758683236.pdf', 247282, 'application/pdf', 'F854F6BB953E', '10.35564300', '124.96705300', '10.355643, 124.967053', '2025-09-24 11:07:16', 'completed', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL, '2025-09-24 11:07:16', '2025-09-24 11:07:16', 3),
+(161, '2410222-2', 'Account Number 922391951.txt', '68d3606444b03_1758683236.txt', 'uploads/BSFi/2nd_Year/2410222-2 - Amparo, Charlene Enriquez/68d3606444b03_1758683236.txt', 240, 'text/plain', 'F854F6BB953E', '10.35564300', '124.96705300', '10.355643, 124.967053', '2025-09-24 11:07:16', 'completed', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL, '2025-09-24 11:07:16', '2025-09-24 11:07:16', 1),
+(162, '2410222-2', 'April - June worksheet far 1A.xlsx', '68d36064469d0_1758683236.xlsx', 'uploads/BSFi/2nd_Year/2410222-2 - Amparo, Charlene Enriquez/68d36064469d0_1758683236.xlsx', 101724, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'F854F6BB953E', '10.35564300', '124.96705300', '10.355643, 124.967053', '2025-09-24 11:07:16', 'completed', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL, '2025-09-24 11:07:16', '2025-09-24 11:07:16', 3),
+(163, '2410222-2', 'AR Form.docx', '68d3606448b72_1758683236.docx', 'uploads/BSFi/2nd_Year/2410222-2 - Amparo, Charlene Enriquez/68d3606448b72_1758683236.docx', 1050253, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'F854F6BB953E', '10.35564300', '124.96705300', '10.355643, 124.967053', '2025-09-24 11:07:16', 'completed', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL, '2025-09-24 11:07:16', '2025-09-24 11:07:16', 4),
+(164, '2210222-2', 'Screenshot_2025-09-23-19-18-47-36_4adc9c55435c1dd5ecd5fed67db60c15.jpg', '68d364c24b53a_1758684354.jpg', 'uploads/BSMB/4th_Year/2210222-2 - Mercado, Myca Espere/68d364c24b53a_1758684354.jpg', 207836, 'image/jpeg', '28:C6:3F:AF:8D:11', NULL, NULL, NULL, '2025-09-24 11:25:54', 'completed', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL, '2025-09-24 11:25:54', '2025-09-24 11:25:54', 3),
+(165, '2210222-2', 'GCash-Globe Telecom Inc SCB 7065-Receipt-23092025191804.PNG.jpg', '68d364c24d2ee_1758684354.jpg', 'uploads/BSMB/4th_Year/2210222-2 - Mercado, Myca Espere/68d364c24d2ee_1758684354.jpg', 64307, 'image/jpeg', '28:C6:3F:AF:8D:11', NULL, NULL, NULL, '2025-09-24 11:25:54', 'completed', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL, '2025-09-24 11:25:54', '2025-09-24 11:25:54', 1),
+(166, '2210222-2', 'Screenshot_2025-09-23-19-08-57-03_40deb401b9ffe8e1df2f1cc5ba480b12.jpg', '68d364c24efc4_1758684354.jpg', 'uploads/BSMB/4th_Year/2210222-2 - Mercado, Myca Espere/68d364c24efc4_1758684354.jpg', 204827, 'image/jpeg', '28:C6:3F:AF:8D:11', NULL, NULL, NULL, '2025-09-24 11:25:54', 'completed', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL, '2025-09-24 11:25:54', '2025-09-24 11:25:54', 3),
+(167, '2210222-2', 'GCash-ALL-NET SURF 30 -Receipt-23092025144605.PNG.jpg', '68d364c250b3d_1758684354.jpg', 'uploads/BSMB/4th_Year/2210222-2 - Mercado, Myca Espere/68d364c250b3d_1758684354.jpg', 49118, 'image/jpeg', '28:C6:3F:AF:8D:11', NULL, NULL, NULL, '2025-09-24 11:25:54', 'completed', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL, '2025-09-24 11:25:54', '2025-09-24 11:25:54', 1),
+(168, '2210222-2', 'GCash-ALL-NET SURF 30 -Receipt-23092025144558.PNG.jpg', '68d364c252632_1758684354.jpg', 'uploads/BSMB/4th_Year/2210222-2 - Mercado, Myca Espere/68d364c252632_1758684354.jpg', 0, 'image/jpeg', '28:C6:3F:AF:8D:11', NULL, NULL, NULL, '2025-09-24 11:25:54', 'completed', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL, '2025-09-24 11:25:54', '2025-09-24 11:25:54', 1);
 
 -- --------------------------------------------------------
 
@@ -2944,6 +2947,13 @@ ALTER TABLE `activity_logs`
   ADD KEY `idx_action` (`action`),
   ADD KEY `idx_table` (`table_name`),
   ADD KEY `idx_created` (`created_at`);
+
+--
+-- Indexes for table `admin_users`
+--
+ALTER TABLE `admin_users`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `password` (`password`);
 
 --
 -- Indexes for table `assessments`
@@ -3306,6 +3316,12 @@ ALTER TABLE `activity_logs`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=210;
 
 --
+-- AUTO_INCREMENT for table `admin_users`
+--
+ALTER TABLE `admin_users`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT for table `assessments`
 --
 ALTER TABLE `assessments`
@@ -3375,7 +3391,7 @@ ALTER TABLE `enrollments`
 -- AUTO_INCREMENT for table `file_upload_devices`
 --
 ALTER TABLE `file_upload_devices`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
 
 --
 -- AUTO_INCREMENT for table `grades`
@@ -3441,7 +3457,7 @@ ALTER TABLE `students`
 -- AUTO_INCREMENT for table `student_devices`
 --
 ALTER TABLE `student_devices`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `student_grades`
@@ -3507,7 +3523,7 @@ ALTER TABLE `test_subjects`
 -- AUTO_INCREMENT for table `uploaded_files`
 --
 ALTER TABLE `uploaded_files`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=148;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=169;
 
 --
 -- AUTO_INCREMENT for table `users`
