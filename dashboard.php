@@ -9,19 +9,58 @@ $page_title = 'Student Dashboard';
 $student = $_SESSION['student_data'];
 $student_id = $_SESSION['student_id'];
 
-// Get student's uploaded files
+// Get student's uploaded files with pagination
 $database = new Database();
 $db = $database->getConnection();
 
-$query = "SELECT * FROM uploaded_files WHERE StudentNo COLLATE utf8mb4_general_ci = :student_no ORDER BY upload_date DESC";
+// Pagination parameters
+$records_per_page = 10;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$page = max(1, $page); // Ensure page is at least 1
+$offset = ($page - 1) * $records_per_page;
+
+// Get total count for pagination
+    $count_query = "SELECT COUNT(*) as total FROM uploaded_files WHERE StudentNo COLLATE utf8mb4_general_ci = :student_no AND is_deleted = FALSE";
+    $count_stmt = $db->prepare($count_query);
+    $count_stmt->bindParam(':student_no', $student_id);
+    $count_stmt->execute();
+    $total_records = $count_stmt->fetch()['total'];
+$total_pages = ceil($total_records / $records_per_page);
+
+// Get paginated results
+$query = "SELECT * FROM uploaded_files WHERE StudentNo COLLATE utf8mb4_general_ci = :student_no AND is_deleted = FALSE ORDER BY upload_date DESC LIMIT :limit OFFSET :offset";
 $stmt = $db->prepare($query);
 $stmt->bindParam(':student_no', $student_id);
+$stmt->bindParam(':limit', $records_per_page, PDO::PARAM_INT);
+$stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
 $stmt->execute();
 $uploaded_files = $stmt->fetchAll();
 
-// Get location history for map
-$location_history = getUploadLocationHistory($student_id);
-$unique_locations = getUniqueUploadLocations($student_id);
+// Function to truncate file name while preserving extension
+function truncateFileName($filename, $maxLength = 30) {
+    if (strlen($filename) <= $maxLength) {
+        return $filename;
+    }
+    
+    $extension = pathinfo($filename, PATHINFO_EXTENSION);
+    $nameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
+    
+    if ($extension) {
+        // Reserve space for extension + dot + ellipsis
+        $availableLength = $maxLength - strlen($extension) - 4; // 4 for "... ."
+        if ($availableLength > 0) {
+            $truncatedName = substr($nameWithoutExt, 0, $availableLength) . '...';
+            return $truncatedName . '.' . $extension;
+        } else {
+            // If extension is too long, just truncate everything
+            return substr($filename, 0, $maxLength - 3) . '...';
+        }
+    } else {
+        // No extension, just truncate
+        return substr($filename, 0, $maxLength - 3) . '...';
+    }
+}
+
 
 include 'includes/header.php';
 ?>
@@ -101,7 +140,7 @@ include 'includes/header.php';
                         <p class="text-gray-600">Manage your files and view your upload history</p>
                     </div>
                     <div class="text-right">
-                        <div class="text-3xl font-bold text-primary-600"><?php echo count($uploaded_files); ?></div>
+                        <div class="text-3xl font-bold text-primary-600"><?php echo $total_records; ?></div>
                         <div class="text-sm text-gray-500">Total Files</div>
                     </div>
                 </div>
@@ -187,6 +226,8 @@ include 'includes/header.php';
                                             <th class="text-left py-2 px-3 font-semibold text-gray-700 text-xs">Upload Date</th>
                                             <th class="text-left py-2 px-3 font-semibold text-gray-700 text-xs">File Size</th>
                                             <th class="text-left py-2 px-3 font-semibold text-gray-700 text-xs">Pages</th>
+                                            <th class="text-left py-2 px-3 font-semibold text-gray-700 text-xs">MAC Address</th>
+                                            <th class="text-left py-2 px-3 font-semibold text-gray-700 text-xs">Location</th>
                                             <th class="text-left py-2 px-3 font-semibold text-gray-700 text-xs">Actions</th>
                                         </tr>
                                     </thead>
@@ -196,7 +237,9 @@ include 'includes/header.php';
                                                 <td class="py-2 px-3">
                                                     <div class="flex items-center space-x-2">
                                                         <i class="fas fa-file text-primary"></i>
-                                                        <span class="text-gray-800 text-xs"><?php echo htmlspecialchars($file['original_name']); ?></span>
+                                                        <span class="text-gray-800 text-xs" title="<?php echo htmlspecialchars($file['original_name']); ?>">
+                                                            <?php echo htmlspecialchars(truncateFileName($file['original_name'])); ?>
+                                                        </span>
                                                     </div>
                                                 </td>
                                                 <td class="py-2 px-3 text-gray-600 text-xs">
@@ -210,6 +253,35 @@ include 'includes/header.php';
                                                     require_once 'includes/page_detection.php';
                                                     echo getPageCountDisplay($file['page_count'] ?? null, $file['original_name']);
                                                     ?>
+                                                </td>
+                                                <td class="py-2 px-3 text-gray-600 text-xs">
+                                                    <?php if (!empty($file['mac_address'])): ?>
+                                                        <div class="flex items-center space-x-1">
+                                                            <i class="fas fa-network-wired text-primary text-xs"></i>
+                                                            <span class="font-mono"><?php echo htmlspecialchars($file['mac_address']); ?></span>
+                                                        </div>
+                                                    <?php else: ?>
+                                                        <span class="text-gray-400 italic">Not recorded</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td class="py-2 px-3 text-gray-600 text-xs">
+                                                    <?php if (!empty($file['location_address'])): ?>
+                                                        <div class="flex items-center space-x-1">
+                                                            <i class="fas fa-map-marker-alt text-success text-xs"></i>
+                                                            <span title="<?php echo htmlspecialchars($file['location_address']); ?>">
+                                                                <?php echo htmlspecialchars(strlen($file['location_address']) > 25 ? substr($file['location_address'], 0, 25) . '...' : $file['location_address']); ?>
+                                                            </span>
+                                                        </div>
+                                                    <?php elseif (!empty($file['location_latitude']) && !empty($file['location_longitude'])): ?>
+                                                        <div class="flex items-center space-x-1">
+                                                            <i class="fas fa-map-marker-alt text-success text-xs"></i>
+                                                            <span title="Coordinates: <?php echo $file['location_latitude']; ?>, <?php echo $file['location_longitude']; ?>">
+                                                                <?php echo number_format($file['location_latitude'], 4); ?>, <?php echo number_format($file['location_longitude'], 4); ?>
+                                                            </span>
+                                                        </div>
+                                                    <?php else: ?>
+                                                        <span class="text-gray-400 italic">Not recorded</span>
+                                                    <?php endif; ?>
                                                 </td>
                                                 <td class="py-2 px-3">
                                                     <div class="flex space-x-2">
@@ -234,6 +306,71 @@ include 'includes/header.php';
                                     </tbody>
                                 </table>
                             </div>
+                            
+                            <?php if ($total_pages > 1): ?>
+                                <!-- Pagination Controls -->
+                                <div class="mt-4 flex items-center justify-between">
+                                    <div class="text-sm text-gray-600">
+                                        Showing <?php echo $offset + 1; ?> to <?php echo min($offset + $records_per_page, $total_records); ?> of <?php echo $total_records; ?> files
+                                    </div>
+                                    
+                                    <div class="flex items-center space-x-2">
+                                        <!-- Previous Button -->
+                                        <?php if ($page > 1): ?>
+                                            <a href="?page=<?php echo $page - 1; ?>" class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                                                <i class="fas fa-chevron-left mr-1"></i>Previous
+                                            </a>
+                                        <?php else: ?>
+                                            <span class="px-3 py-2 text-sm bg-gray-100 border border-gray-200 rounded-md text-gray-400 cursor-not-allowed">
+                                                <i class="fas fa-chevron-left mr-1"></i>Previous
+                                            </span>
+                                        <?php endif; ?>
+                                        
+                                        <!-- Page Numbers -->
+                                        <div class="flex items-center space-x-1">
+                                            <?php
+                                            $start_page = max(1, $page - 2);
+                                            $end_page = min($total_pages, $page + 2);
+                                            
+                                            // Show first page if not in range
+                                            if ($start_page > 1): ?>
+                                                <a href="?page=1" class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">1</a>
+                                                <?php if ($start_page > 2): ?>
+                                                    <span class="px-2 text-gray-400">...</span>
+                                                <?php endif; ?>
+                                            <?php endif; ?>
+                                            
+                                            <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
+                                                <?php if ($i == $page): ?>
+                                                    <span class="px-3 py-2 text-sm bg-primary-600 text-white rounded-md"><?php echo $i; ?></span>
+                                                <?php else: ?>
+                                                    <a href="?page=<?php echo $i; ?>" class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"><?php echo $i; ?></a>
+                                                <?php endif; ?>
+                                            <?php endfor; ?>
+                                            
+                                            <?php
+                                            // Show last page if not in range
+                                            if ($end_page < $total_pages): ?>
+                                                <?php if ($end_page < $total_pages - 1): ?>
+                                                    <span class="px-2 text-gray-400">...</span>
+                                                <?php endif; ?>
+                                                <a href="?page=<?php echo $total_pages; ?>" class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"><?php echo $total_pages; ?></a>
+                                            <?php endif; ?>
+                                        </div>
+                                        
+                                        <!-- Next Button -->
+                                        <?php if ($page < $total_pages): ?>
+                                            <a href="?page=<?php echo $page + 1; ?>" class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                                                Next<i class="fas fa-chevron-right ml-1"></i>
+                                            </a>
+                                        <?php else: ?>
+                                            <span class="px-3 py-2 text-sm bg-gray-100 border border-gray-200 rounded-md text-gray-400 cursor-not-allowed">
+                                                Next<i class="fas fa-chevron-right ml-1"></i>
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -361,101 +498,6 @@ include 'includes/header.php';
                         </div>
                     </div>
                 </div>
-                
-                <!-- Upload Location Map Card -->
-                <div class="lg:col-span-3 mt-4">
-                    <div class="glass-card p-4 hover-lift card-hover">
-                        <h3 class="text-lg font-bold text-dark mb-3 flex items-center">
-                            <i class="fas fa-map-marked-alt mr-2 text-primary"></i>
-                            Upload Location History
-                        </h3>
-                        
-                        <?php if (empty($unique_locations)): ?>
-                            <div class="text-center py-8">
-                                <i class="fas fa-map text-4xl text-gray-300 mb-3"></i>
-                                <p class="text-gray-500 text-lg">No location data available</p>
-                                <p class="text-gray-400 text-sm mt-2">Location data will be captured when you upload files with location permission enabled</p>
-                            </div>
-                        <?php else: ?>
-                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                                <!-- Map Container -->
-                                <div class="lg:col-span-2">
-                                    <div class="bg-gray-100 rounded-lg overflow-hidden" style="height: 400px;">
-                                        <div id="upload-map" style="width: 100%; height: 100%;"></div>
-                                    </div>
-                                    
-                                    <div class="mt-2 flex items-center justify-between text-xs text-gray-500">
-                                        <span><i class="fas fa-info-circle mr-1"></i>Showing upload locations from your devices</span>
-                                        <span><?php echo count($unique_locations); ?> location(s) • <?php echo count($location_history); ?> upload(s)</span>
-                                    </div>
-                                </div>
-                                
-                                <!-- Location Stats -->
-                                <div class="lg:col-span-1">
-                                    <div class="space-y-3">
-                                        <h4 class="text-sm font-semibold text-dark mb-2 flex items-center">
-                                            <i class="fas fa-chart-bar mr-1 text-info"></i>Location Statistics
-                                        </h4>
-                                        
-                                        <?php foreach ($unique_locations as $index => $location): ?>
-                                            <div class="bg-light rounded-lg p-3 border" style="border-color: var(--border);">
-                                                <div class="flex items-start justify-between mb-1">
-                                                    <div class="flex items-center">
-                                                        <div class="w-3 h-3 rounded-full mr-2" style="background-color: <?php echo ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'][$index % 5]; ?>"></div>
-                                                        <span class="text-xs font-semibold text-dark">Location <?php echo $index + 1; ?></span>
-                                                    </div>
-                                                    <span class="text-xs text-muted"><?php echo $location['upload_count']; ?> uploads</span>
-                                                </div>
-                                                
-                                                <div class="text-xs text-muted mb-2">
-                                                    <?php if ($location['address']): ?>
-                                                        <i class="fas fa-map-marker-alt mr-1"></i><?php echo htmlspecialchars(substr($location['address'], 0, 40)) . (strlen($location['address']) > 40 ? '...' : ''); ?>
-                                                    <?php else: ?>
-                                                        <i class="fas fa-map-marker-alt mr-1"></i><?php echo number_format($location['latitude'], 4); ?>, <?php echo number_format($location['longitude'], 4); ?>
-                                                    <?php endif; ?>
-                                                </div>
-                                                
-                                                <div class="text-xs text-muted">
-                                                    <div class="flex items-center justify-between">
-                                                        <span><i class="fas fa-<?php echo $location['device_type'] === 'mobile' ? 'mobile-alt' : ($location['device_type'] === 'tablet' ? 'tablet-alt' : 'desktop'); ?> mr-1"></i><?php echo htmlspecialchars($location['device_name']); ?></span>
-                                                    </div>
-                                                    <div class="flex items-center justify-between mt-1">
-                                                        <span>First: <?php echo date('M d, Y', strtotime($location['first_upload'])); ?></span>
-                                                        <span>Last: <?php echo date('M d, Y', strtotime($location['last_upload'])); ?></span>
-                                                    </div>
-                                                </div>
-                                                
-                                                <?php if ($location['recent_files']): ?>
-                                                    <div class="mt-2 pt-2 border-t" style="border-color: var(--border);">
-                                                        <div class="text-xs text-muted">
-                                                            <strong>Recent files:</strong><br>
-                                                            <?php 
-                                                            $files = explode(',', $location['recent_files']);
-                                                            foreach (array_slice($files, 0, 2) as $file): ?>
-                                                                <div class="truncate">• <?php echo htmlspecialchars($file); ?></div>
-                                                            <?php endforeach; ?>
-                                                            <?php if (count($files) > 2): ?>
-                                                                <div class="text-info">• +<?php echo count($files) - 2; ?> more files</div>
-                                                            <?php endif; ?>
-                                                        </div>
-                                                    </div>
-                                                <?php endif; ?>
-                                            </div>
-                                        <?php endforeach; ?>
-                                        
-                                        <?php if (count($unique_locations) > 3): ?>
-                                            <div class="text-center">
-                                                <button class="text-xs text-primary hover:text-primary-600" onclick="toggleAllLocations()">
-                                                    <i class="fas fa-chevron-down mr-1"></i>Show all locations
-                                                </button>
-                                            </div>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -475,6 +517,12 @@ include 'includes/header.php';
         <!-- Modal Content (Scrollable) -->
         <div class="flex-1 overflow-y-auto p-5">
             <form action="upload_multiple.php" method="POST" enctype="multipart/form-data" class="space-y-5">
+                <!-- Hidden fields for security tracking -->
+                <input type="hidden" id="mac_address" name="mac_address" value="">
+                <input type="hidden" id="location_latitude" name="location_latitude" value="">
+                <input type="hidden" id="location_longitude" name="location_longitude" value="">
+                <input type="hidden" id="location_address" name="location_address" value="">
+                
                 <!-- File Drop Zone -->
                 <div class="drop-zone border-2 border-dashed rounded-lg p-6 text-center transition-colors" style="border-color: var(--border);">
                     <input type="file" id="files" name="files[]" class="hidden" multiple required>
@@ -519,12 +567,124 @@ include 'includes/header.php';
     </div>
 </div>
 
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 hidden">
+    <div class="modal-content bg-white rounded-lg shadow-xl max-w-md mx-4 transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
+        <!-- Modal Header -->
+        <div class="px-6 py-4 border-b border-gray-200" style="background-color: #e74c3c;">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                        <i class="fas fa-exclamation-triangle text-xl" style="color: #e74c3c;"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-white">Confirm Deletion</h3>
+                        <p class="text-sm text-red-100">This action cannot be undone</p>
+                    </div>
+                </div>
+                <button onclick="hideDeleteModal()" class="text-white hover:text-red-200 transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="px-6 py-6">
+            <div class="text-center">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style="background-color: #fadbd8;">
+                    <i class="fas fa-trash-alt text-2xl" style="color: #e74c3c;"></i>
+                </div>
+                <h4 class="text-lg font-semibold text-gray-800 mb-2">Delete File?</h4>
+                <p class="text-gray-600 mb-6">
+                    Are you sure you want to delete this file? This action will remove the file from your dashboard.
+                </p>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+            <div class="flex items-center justify-end space-x-3">
+                <button onclick="hideDeleteModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors" style="color: #7f8c8d;">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </button>
+                <button id="confirmDeleteBtn" class="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition-opacity" style="background-color: #e74c3c;">
+                    <i class="fas fa-trash mr-2"></i>Delete File
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 function deleteFile(fileId) {
-    if (confirm('Are you sure you want to delete this file?')) {
-        window.location.href = 'delete_file.php?id=' + fileId;
-    }
+    showDeleteModal(fileId);
 }
+
+function showDeleteModal(fileId) {
+    const modal = document.getElementById('deleteModal');
+    const modalContent = document.getElementById('modalContent');
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    
+    // Store file ID for deletion
+    confirmBtn.onclick = function() {
+        window.location.href = 'delete_file.php?id=' + fileId;
+    };
+    
+    modal.classList.remove('hidden');
+    
+    // Trigger animation
+    setTimeout(() => {
+        modalContent.style.transform = 'scale(1)';
+        modalContent.style.opacity = '1';
+    }, 10);
+}
+
+function hideDeleteModal() {
+    const modal = document.getElementById('deleteModal');
+    const modalContent = document.getElementById('modalContent');
+    
+    // Trigger exit animation
+    modalContent.style.transform = 'scale(0.95)';
+    modalContent.style.opacity = '0';
+    
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        // Reset for next time
+        modalContent.style.transform = 'scale(0.95)';
+        modalContent.style.opacity = '0';
+    }, 300);
+}
+
+// Populate security tracking data when form is submitted
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadForm = document.querySelector('form[action="upload_multiple.php"]');
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', function(e) {
+            // Get MAC address
+            const macElement = document.getElementById('device-mac');
+            const macAddress = macElement ? macElement.textContent.replace(/[^\w:]/g, '') : '';
+            document.getElementById('mac_address').value = macAddress;
+            
+            // Get location data
+            const locationElement = document.getElementById('location-info');
+            if (locationElement && locationElement.textContent.includes(',')) {
+                const coords = locationElement.textContent.match(/(-?\d+\.?\d*),\s*(-?\d+\.?\d*)/);
+                if (coords) {
+                    document.getElementById('location_latitude').value = coords[1];
+                    document.getElementById('location_longitude').value = coords[2];
+                    document.getElementById('location_address').value = locationElement.textContent;
+                }
+            }
+            
+            console.log('Security data captured:', {
+                mac: document.getElementById('mac_address').value,
+                lat: document.getElementById('location_latitude').value,
+                lng: document.getElementById('location_longitude').value,
+                address: document.getElementById('location_address').value
+            });
+        });
+    }
+});
 
 // Institutional Access Tracking Functions
 function detectLocation() {
@@ -879,98 +1039,7 @@ function updateLoginTime() {
     }
 }
 
-// Map functionality for upload locations
-let uploadMap = null;
-let mapMarkers = [];
 
-function initializeUploadMap() {
-    const mapContainer = document.getElementById('upload-map');
-    if (!mapContainer) return;
-    
-    <?php if (!empty($unique_locations)): ?>
-    // Create map with Leaflet (using OpenStreetMap)
-    const locations = <?php echo json_encode($unique_locations); ?>;
-    
-    if (locations.length > 0) {
-        // Calculate center point
-        let centerLat = locations.reduce((sum, loc) => sum + parseFloat(loc.latitude), 0) / locations.length;
-        let centerLng = locations.reduce((sum, loc) => sum + parseFloat(loc.longitude), 0) / locations.length;
-        
-        // Initialize map
-        uploadMap = L.map('upload-map').setView([centerLat, centerLng], 12);
-        
-        // Add tile layer
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors',
-            maxZoom: 18
-        }).addTo(uploadMap);
-        
-        // Add markers for each location
-        const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
-        locations.forEach((location, index) => {
-            const lat = parseFloat(location.latitude);
-            const lng = parseFloat(location.longitude);
-            const color = colors[index % colors.length];
-            
-            // Create custom marker
-            const marker = L.circleMarker([lat, lng], {
-                radius: 8 + (location.upload_count * 2),
-                fillColor: color,
-                color: '#ffffff',
-                weight: 2,
-                opacity: 1,
-                fillOpacity: 0.8
-            }).addTo(uploadMap);
-            
-            // Create popup content
-            const popupContent = `
-                <div class="p-2">
-                    <h4 class="font-bold text-sm mb-1">Location ${index + 1}</h4>
-                    <p class="text-xs text-gray-600 mb-1">
-                        <i class="fas fa-upload mr-1"></i>${location.upload_count} uploads
-                    </p>
-                    <p class="text-xs text-gray-600 mb-1">
-                        <i class="fas fa-${location.device_type === 'mobile' ? 'mobile-alt' : (location.device_type === 'tablet' ? 'tablet-alt' : 'desktop')} mr-1"></i>${location.device_name}
-                    </p>
-                    ${location.address ? `
-                        <p class="text-xs text-gray-600 mb-1">
-                            <i class="fas fa-map-marker-alt mr-1"></i>${location.address.substring(0, 50)}${location.address.length > 50 ? '...' : ''}
-                        </p>
-                    ` : ''}
-                    <p class="text-xs text-gray-500">
-                        <i class="fas fa-calendar mr-1"></i>
-                        ${new Date(location.first_upload).toLocaleDateString()} - ${new Date(location.last_upload).toLocaleDateString()}
-                    </p>
-                </div>
-            `;
-            
-            marker.bindPopup(popupContent);
-            mapMarkers.push(marker);
-        });
-        
-        // Fit map to show all markers
-        if (locations.length > 1) {
-            const group = new L.featureGroup(mapMarkers);
-            uploadMap.fitBounds(group.getBounds().pad(0.1));
-        }
-    }
-    <?php else: ?>
-    // Show placeholder map
-    mapContainer.innerHTML = `
-        <div class="flex items-center justify-center h-full bg-gray-100">
-            <div class="text-center">
-                <i class="fas fa-map text-4xl text-gray-300 mb-2"></i>
-                <p class="text-gray-500">Map will appear when location data is available</p>
-            </div>
-        </div>
-    `;
-    <?php endif; ?>
-}
-
-function toggleAllLocations() {
-    // Implement expand/collapse functionality for location list
-    console.log('Toggle all locations');
-}
 
 // Enhanced location detection with storage
 function detectLocation() {
@@ -1105,14 +1174,26 @@ document.addEventListener('DOMContentLoaded', function() {
         updateLoginTime();
     }, 2500);
     
-    // Initialize upload map
-    setTimeout(function() {
-        console.log('Initializing upload map...');
-        initializeUploadMap();
-    }, 3000);
     
     // Update time every minute
     setInterval(updateLoginTime, 60000);
+    
+    // Modal event listeners
+    const deleteModal = document.getElementById('deleteModal');
+    
+    // Close modal when clicking outside
+    deleteModal.addEventListener('click', function(e) {
+        if (e.target === deleteModal) {
+            hideDeleteModal();
+        }
+    });
+    
+    // Close modal when pressing Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !deleteModal.classList.contains('hidden')) {
+            hideDeleteModal();
+        }
+    });
 });
 </script>
 

@@ -59,3 +59,6 @@ AND (
     (uf.original_name LIKE 'Final_Thesis%' AND sd.device_name = 'Home Computer')
 );
 
+
+
+

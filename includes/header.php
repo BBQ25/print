@@ -9,10 +9,67 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="<?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/') !== false) ? '../assets/css/style.css' : 'assets/css/style.css'; ?>">
     
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Font Awesome - Multiple CDN fallbacks -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" 
+          integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" 
+          crossorigin="anonymous" 
+          referrerpolicy="no-referrer">
+    
+    <!-- Font Awesome Fallback CDN -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.5.1/css/all.css" 
+          crossorigin="anonymous" 
+          onerror="this.onerror=null;this.href='https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css';">
+    
+    <!-- Local Font Awesome Fallback -->
+    <style>
+        /* Immediate fallback for Font Awesome icons */
+        .fas, .far, .fab, .fa {
+            font-family: "Font Awesome 6 Free", "Font Awesome 6 Pro", "Font Awesome 6 Brands", "FontAwesome", sans-serif !important;
+            font-weight: 900;
+            -webkit-font-smoothing: antialiased;
+            display: inline-block;
+            font-style: normal;
+            font-variant: normal;
+            text-rendering: auto;
+            line-height: 1;
+        }
+        
+        /* Force icon display with unicode fallbacks */
+        .fa-user-shield:before { content: "\f505" !important; }
+        .fa-sign-out-alt:before { content: "\f2f5" !important; }
+        .fa-check-circle:before { content: "\f058" !important; }
+        .fa-exclamation-circle:before { content: "\f06a" !important; }
+        .fa-users:before { content: "\f0c0" !important; }
+        .fa-file:before { content: "\f15b" !important; }
+        .fa-chart-line:before { content: "\f201" !important; }
+        .fa-clock:before { content: "\f017" !important; }
+        .fa-inbox:before { content: "\f01c" !important; }
+        .fa-plus:before { content: "\f067" !important; }
+        .fa-eye:before { content: "\f06e" !important; }
+        .fa-edit:before { content: "\f044" !important; }
+        .fa-times:before { content: "\f00d" !important; }
+        .fa-user:before { content: "\f007" !important; }
+        .fa-folder-open:before { content: "\f07c" !important; }
+        .fa-download:before { content: "\f019" !important; }
+        .fa-trash:before { content: "\f1f8" !important; }
+        .fa-arrow-left:before { content: "\f060" !important; }
+        .fa-user-edit:before { content: "\f4ff" !important; }
+        .fa-save:before { content: "\f0c7" !important; }
+        .fa-lock:before { content: "\f023" !important; }
+        .fa-sign-in-alt:before { content: "\f2f6" !important; }
+        .fa-bug:before { content: "\f188" !important; }
+        .fa-tachometer-alt:before { content: "\f3fd" !important; }
+        .fa-angle-left:before { content: "\f104" !important; }
+        .fa-angle-right:before { content: "\f105" !important; }
+        .fa-angle-double-left:before { content: "\f100" !important; }
+        .fa-angle-double-right:before { content: "\f101" !important; }
+        .fa-arrow-up:before { content: "\f062" !important; }
+        .fa-upload:before { content: "\f093" !important; }
+        .fa-percentage:before { content: "\f295" !important; }
+        .fa-bars:before { content: "\f0c9" !important; }
+    </style>
     
     <!-- Leaflet CSS for Maps -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
@@ -23,6 +80,31 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
             integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
             crossorigin=""></script>
+    
+    <!-- Font Awesome Fallback Script -->
+    <script>
+        // Check if Font Awesome loaded properly
+        document.addEventListener('DOMContentLoaded', function() {
+            // Wait a bit for fonts to load
+            setTimeout(function() {
+                const testIcon = document.createElement('i');
+                testIcon.className = 'fas fa-check';
+                testIcon.style.visibility = 'hidden';
+                testIcon.style.position = 'absolute';
+                document.body.appendChild(testIcon);
+                
+                const computedStyle = window.getComputedStyle(testIcon, ':before');
+                const fontFamily = computedStyle.getPropertyValue('font-family');
+                
+                if (!fontFamily.includes('Font Awesome')) {
+                    console.warn('Font Awesome not loaded properly, applying fallbacks');
+                    document.body.classList.add('fa-fallback');
+                }
+                
+                document.body.removeChild(testIcon);
+            }, 1000);
+        });
+    </script>
     
     <!-- Custom Tailwind Config -->
     <script>
@@ -48,29 +130,11 @@
     
     <style>
         body {
-            background: 
-                radial-gradient(circle at 20% 50%, rgba(83, 82, 237, 0.4) 0%, transparent 60%), /* saturated-sky */
-                radial-gradient(circle at 80% 20%, rgba(112, 161, 255, 0.3) 0%, transparent 60%), /* french-sky-blue */
-                radial-gradient(circle at 40% 80%, rgba(55, 66, 250, 0.3) 0%, transparent 60%), /* bright-greek */
-                linear-gradient(135deg, #5352ed 0%, #3742fa 50%, #70a1ff 100%); /* saturated-sky to bright-greek to french-sky-blue */
+            background: #f8fafc;
             min-height: 100vh;
             font-family: 'Figtree', sans-serif;
             position: relative;
             overflow-x: hidden;
-        }
-        
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 15% 25%, rgba(241, 242, 246, 0.1) 0%, transparent 50%), /* anti-flash-white */
-                radial-gradient(circle at 85% 75%, rgba(223, 228, 234, 0.08) 0%, transparent 50%); /* city-lights */
-            pointer-events: none;
-            z-index: -1;
         }
         
         /* Improved text readability */

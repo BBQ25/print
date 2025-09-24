@@ -80,18 +80,14 @@ function getUploadLocationHistory($student_id) {
             uf.upload_date,
             uf.original_name,
             uf.file_type,
-            sd.location_latitude,
-            sd.location_longitude,
-            sd.location_address,
-            sd.device_name,
-            sd.device_type,
-            fud.upload_timestamp
+            uf.mac_address,
+            uf.location_latitude,
+            uf.location_longitude,
+            uf.location_address,
+            uf.file_size
         FROM uploaded_files uf
-        INNER JOIN file_upload_devices fud ON uf.id = fud.file_id
-        INNER JOIN student_devices sd ON fud.device_id = sd.id
         WHERE uf.StudentNo = :student_no 
-        AND sd.location_latitude IS NOT NULL 
-        AND sd.location_longitude IS NOT NULL
+        AND (uf.location_latitude IS NOT NULL AND uf.location_longitude IS NOT NULL)
         ORDER BY uf.upload_date DESC
         LIMIT 100";
         
@@ -116,29 +112,41 @@ function getUniqueUploadLocations($student_id) {
         $db = $database->getConnection();
         
         $query = "SELECT 
-            sd.location_latitude as latitude,
-            sd.location_longitude as longitude,
-            sd.location_address as address,
-            sd.device_name,
-            sd.device_type,
+            uf.location_latitude as latitude,
+            uf.location_longitude as longitude,
+            uf.location_address as address,
+            uf.mac_address,
             COUNT(uf.id) as upload_count,
             MIN(uf.upload_date) as first_upload,
             MAX(uf.upload_date) as last_upload,
-            GROUP_CONCAT(DISTINCT uf.original_name ORDER BY uf.upload_date DESC LIMIT 5) as recent_files
+            GROUP_CONCAT(DISTINCT uf.original_name ORDER BY uf.upload_date DESC LIMIT 5) as recent_files,
+            AVG(uf.file_size) as avg_file_size,
+            SUM(uf.file_size) as total_file_size
         FROM uploaded_files uf
-        INNER JOIN file_upload_devices fud ON uf.id = fud.file_id
-        INNER JOIN student_devices sd ON fud.device_id = sd.id
         WHERE uf.StudentNo = :student_no 
-        AND sd.location_latitude IS NOT NULL 
-        AND sd.location_longitude IS NOT NULL
-        GROUP BY sd.location_latitude, sd.location_longitude, sd.device_name
-        ORDER BY MAX(uf.upload_date) DESC";
+        AND uf.location_latitude IS NOT NULL 
+        AND uf.location_longitude IS NOT NULL
+        GROUP BY uf.location_latitude, uf.location_longitude, uf.mac_address
+        ORDER BY MAX(uf.upload_date) DESC
+        LIMIT 20";
         
         $stmt = $db->prepare($query);
         $stmt->bindParam(':student_no', $student_id);
         $stmt->execute();
         
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $locations = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Add device type detection based on MAC address
+        foreach ($locations as &$location) {
+            $location['device_name'] = 'Device ' . substr($location['mac_address'], -5);
+            $location['device_type'] = 'desktop'; // Default, could be enhanced with MAC vendor detection
+            
+            // Format file sizes
+            $location['avg_file_size_mb'] = round($location['avg_file_size'] / (1024 * 1024), 2);
+            $location['total_file_size_mb'] = round($location['total_file_size'] / (1024 * 1024), 2);
+        }
+        
+        return $locations;
         
     } catch (PDOException $e) {
         error_log("Unique locations error: " . $e->getMessage());

@@ -84,10 +84,10 @@ include '../includes/header.php';
                                 <span class="text-gray-600">Name:</span>
                                 <span class="font-semibold"><?php echo htmlspecialchars($student['FirstName'] . ' ' . $student['Surname']); ?></span>
                             </div>
-                                            <?php if ($student['email']): ?>
+                            <?php if ($student['Email']): ?>
                             <div class="flex justify-between">
                                 <span class="text-gray-600">Email:</span>
-                                <span class="font-semibold"><?php echo htmlspecialchars($student['email']); ?></span>
+                                <span class="font-semibold"><?php echo htmlspecialchars($student['Email']); ?></span>
                             </div>
                             <?php endif; ?>
                             <?php if ($student['Course']): ?>

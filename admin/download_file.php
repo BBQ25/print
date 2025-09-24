@@ -15,7 +15,7 @@ $database = new Database();
 $db = $database->getConnection();
 
 // Get file information
-$query = "SELECT * FROM uploaded_files WHERE FileID = :file_id";
+$query = "SELECT * FROM uploaded_files WHERE id = :file_id";
 $stmt = $db->prepare($query);
 $stmt->bindParam(':file_id', $file_id);
 $stmt->execute();

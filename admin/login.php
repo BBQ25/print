@@ -6,22 +6,34 @@ $page_title = 'Admin Login';
 $error_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $username = trim($_POST['username']);
     $password = trim($_POST['password']);
     
-    if (empty($username) || empty($password)) {
-        $error_message = 'Please enter both username and password';
+    if (empty($password)) {
+        $error_message = 'Please enter the admin password';
     } else {
-        // For demo purposes, using hardcoded admin credentials
-        // In production, this should be stored in database with proper hashing
-        if ($username === 'admin' && $password === 'admin123') {
-            $_SESSION['admin_id'] = 'admin';
-            $_SESSION['admin_name'] = 'Administrator';
+        $database = new Database();
+        $db = $database->getConnection();
+        
+        try {
+            // Check if password exists in admin table
+            $query = "SELECT * FROM admin_users WHERE password = :password AND status = 'active'";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam(':password', $password);
+            $stmt->execute();
             
-            header('Location: dashboard.php');
-            exit();
-        } else {
-            $error_message = 'Invalid username or password.';
+            if ($stmt->rowCount() > 0) {
+                $admin = $stmt->fetch();
+                $_SESSION['admin_id'] = $admin['id'];
+                $_SESSION['admin_name'] = $admin['name'];
+                $_SESSION['admin_role'] = $admin['role'];
+                
+                header('Location: dashboard.php');
+                exit();
+            } else {
+                $error_message = 'Invalid admin password.';
+            }
+        } catch (PDOException $e) {
+            $error_message = 'Database error: ' . $e->getMessage();
         }
     }
 }
@@ -58,31 +70,18 @@ include '../includes/header.php';
             <?php endif; ?>
 
             <div>
-                <label for="username" class="block text-sm font-medium text-dark mb-2">
-                    <i class="fas fa-user mr-2"></i>Username
-                </label>
-                <input 
-                    type="text" 
-                    id="username" 
-                    name="username" 
-                    class="form-input w-full"
-                    placeholder="Enter your username"
-                    value="<?php echo isset($_POST['username']) ? htmlspecialchars($_POST['username']) : ''; ?>"
-                    required
-                >
-            </div>
-
-            <div>
                 <label for="password" class="block text-sm font-medium text-dark mb-2">
-                    <i class="fas fa-lock mr-2"></i>Password
+                    <i class="fas fa-key mr-2"></i>Admin Password
                 </label>
                 <input 
                     type="password" 
                     id="password" 
                     name="password" 
                     class="form-input w-full"
-                    placeholder="Enter your password"
+                    placeholder="Enter admin password"
+                    value="<?php echo isset($_POST['password']) ? htmlspecialchars($_POST['password']) : ''; ?>"
                     required
+                    autofocus
                 >
             </div>
 
@@ -90,16 +89,15 @@ include '../includes/header.php';
                 type="submit" 
                 class="btn-primary w-full text-center font-semibold py-3 hover-lift"
             >
-                <i class="fas fa-sign-in-alt mr-2"></i>Sign In
+                <i class="fas fa-sign-in-alt mr-2"></i>Access Admin Panel
             </button>
         </form>
 
         <!-- Additional Links -->
         <div class="mt-8 text-center">
             <div class="text-sm text-muted mb-4">
-                <strong>Demo Credentials:</strong><br>
-                Username: admin<br>
-                Password: admin123
+                <i class="fas fa-shield-alt mr-1"></i>
+                Secure admin access only
             </div>
             <div>
                 <a href="../login.php" class="text-secondary hover:text-primary text-sm transition-colors">

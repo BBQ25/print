@@ -27,6 +27,9 @@ CREATE TABLE IF NOT EXISTS uploaded_files (
     file_type VARCHAR(20),
     upload_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     status ENUM('pending','processing','completed','failed') DEFAULT 'completed',
+    is_deleted BOOLEAN DEFAULT FALSE,
+    deleted_at DATETIME NULL,
+    deleted_by VARCHAR(50) NULL,
     download_count INT DEFAULT 0,
     first_download_date DATETIME NULL,
     last_download_date DATETIME NULL,
@@ -35,7 +38,8 @@ CREATE TABLE IF NOT EXISTS uploaded_files (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_student (StudentNo),
-    INDEX idx_upload_date (upload_date)
+    INDEX idx_upload_date (upload_date),
+    INDEX idx_is_deleted (is_deleted)
 );
 
 -- Student device tracking table
